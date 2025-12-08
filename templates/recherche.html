@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Recherche – CinéFan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<header class="site-header">
+    <div class="logo">CinéFan</div>
+    <nav class="main-nav">
+        <a href="{{ url_for('accueil') }}">Accueil</a>
+        <a href="{{ url_for('recherche') }}" class="active">Recherche</a>
+        <a href="{{ url_for('connexion') }}">Connexion</a>
+        <a href="{{ url_for('inscription') }}">Inscription</a>
+    </nav>
+</header>
+
+<main>
+
+<h2>Recherche</h2>
+
+<form action="{{ url_for('recherche') }}" method="get" class="search-form">
+    <input type="text" name="q" placeholder="Titre ou description" value="{{ q }}">
+    <button type="submit">Rechercher</button>
+</form>
+
+{% if q %}
+<h3>Résultats pour « {{ q }} »</h3>
+
+<ul class="list">
+    {% for o in resultats %}
+    <li>
+        <a href="{{ url_for('oeuvre_detail', id_oeuvre=o.id_oeuvre) }}">
+            {{ o.titre }}
+        </a>
+        <span class="muted">({{ o.type_oeuvre }}, {{ o.date_creation }})</span>
+    </li>
+    {% else %}
+    <p>Aucun résultat.</p>
+    {% endfor %}
+</ul>
+{% endif %}
+
+</main>
+
+</body>
+</html>

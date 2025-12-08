@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Inscription – CinéFan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<header class="site-header">
+    <div class="logo">CinéFan</div>
+    <nav class="main-nav">
+        <a href="{{ url_for('accueil') }}">Accueil</a>
+        <a href="{{ url_for('connexion') }}">Connexion</a>
+        <a href="{{ url_for('inscription') }}" class="active">Inscription</a>
+    </nav>
+</header>
+
+<main class="auth-container">
+    <section class="auth-card">
+        <h2>Créer un compte</h2>
+
+        <form action="{{ url_for('inscription') }}" method="post" class="auth-form">
+
+            <label>Pseudo
+                <input type="text" name="pseudo" required>
+            </label>
+
+            <label>Email
+                <input type="email" name="email" required>
+            </label>
+
+            <label>Mot de passe (8 caractères)
+                <input type="password" name="mdp" minlength="8" maxlength="8" required>
+            </label>
+
+            <button type="submit">Créer mon compte</button>
+        </form>
+
+        <p class="auth-alt">
+            Déjà inscrit ?
+            <a href="{{ url_for('connexion') }}">Se connecter</a>.
+        </p>
+    </section>
+</main>
+
+</body>
+</html>

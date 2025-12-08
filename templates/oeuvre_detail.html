@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ oeuvre.titre }} – CinéFan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<header class="site-header">
+    <div class="logo">CinéFan</div>
+    <nav class="main-nav">
+        <a href="{{ url_for('accueil') }}">Accueil</a>
+        <a href="{{ url_for('oeuvres') }}">Œuvres</a>
+        <a href="{{ url_for('recherche') }}">Recherche</a>
+    </nav>
+</header>
+
+<main>
+
+<h2>{{ oeuvre.titre }}</h2>
+
+<p class="muted">
+    {{ oeuvre.type_oeuvre }}
+    {% if oeuvre.numero_volet_saison %}
+      – Volet/saison n° {{ oeuvre.numero_volet_saison }}
+    {% endif %}
+    – {{ oeuvre.date_creation }}
+</p>
+
+{% if genres %}
+<p><strong>Genres :</strong>
+    {% for g in genres %}
+        {{ g.nom_cat }}{% if not loop.last %}, {% endif %}
+    {% endfor %}
+</p>
+{% endif %}
+
+{% if oeuvre.description_oeuvre %}
+<p>{{ oeuvre.description_oeuvre }}</p>
+{% endif %}
+
+{% if realisateurs %}
+<h3>Réalisateur(s)</h3>
+<ul>
+    {% for r in realisateurs %}
+    <li>
+        <a href="{{ url_for('artiste_detail', id_artiste=r.id_artiste) }}">
+            {{ r.prenom }} {{ r.nom }}
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% if acteurs %}
+<h3>Acteurs & personnages</h3>
+<ul>
+    {% for a in acteurs %}
+    <li>
+        <a href="{{ url_for('artiste_detail', id_artiste=a.id_artiste) }}">
+            {{ a.prenom }} {{ a.nom }}
+        </a>
+        en <em>{{ a.personnage }}</em>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% if liens %}
+<h3>Liens avec d'autres œuvres</h3>
+<ul>
+    {% for l in liens %}
+    <li>
+        {{ l.type_lien }} :
+        <a href="{{ url_for('oeuvre_detail', id_oeuvre=l.id_liee) }}">
+            {{ l.titre }}
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% if session.get('user_id') %}
+<form action="{{ url_for('ajouter_favori', id_oeuvre=oeuvre.id_oeuvre) }}" method="post">
+    <button type="submit">
+        {% if est_favori %}Dans vos favoris{% else %}Ajouter aux favoris{% endif %}
+    </button>
+</form>
+
+<h3>Ajouter un commentaire</h3>
+<form action="{{ url_for('ajouter_commentaire', id_oeuvre=oeuvre.id_oeuvre) }}" method="post">
+    <textarea name="contenu" rows="3" placeholder="Votre avis..." required></textarea>
+    <button type="submit">Envoyer</button>
+</form>
+{% else %}
+<p>
+    <a href="{{ url_for('connexion') }}">Connectez-vous</a>
+    pour commenter ou ajouter aux favoris.
+</p>
+{% endif %}
+
+<h3>Commentaires</h3>
+<ul class="list">
+    {% for c in commentaires %}
+    <li>
+        <strong>{{ c.pseudo }}</strong>
+        – <span class="muted">{{ c.date_commentaire }}</span><br>
+        {{ c.contenu }}
+    </li>
+    {% else %}
+    <p>Aucun commentaire pour le moment.</p>
+    {% endfor %}
+</ul>
+
+</main>
+
+</body>
+</html>
