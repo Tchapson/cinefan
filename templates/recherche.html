@@ -10,11 +10,25 @@
 
 <header class="site-header">
     <div class="logo">CinéFan</div>
+
     <nav class="main-nav">
         <a href="{{ url_for('accueil') }}">Accueil</a>
+        <a href="{{ url_for('oeuvres') }}">Œuvres</a>
         <a href="{{ url_for('recherche') }}" class="active">Recherche</a>
-        <a href="{{ url_for('connexion') }}">Connexion</a>
-        <a href="{{ url_for('inscription') }}">Inscription</a>
+        <a href="{{ url_for('artistes') }}">Artistes</a>
+
+        {% if session.get('user_id') %}
+            <a href="{{ url_for('favoris') }}">Mes favoris</a>
+            <a href="{{ url_for('profil') }}" class="user-tag">
+                👤 {{ session['pseudo'] }}
+            </a>
+            <form action="{{ url_for('deconnexion') }}" method="post" style="display:inline;">
+                <button type="submit" class="logout-btn">Déconnexion</button>
+            </form>
+        {% else %}
+            <a href="{{ url_for('connexion') }}">Connexion</a>
+            <a href="{{ url_for('inscription') }}">Inscription</a>
+        {% endif %}
     </nav>
 </header>
 
@@ -39,7 +53,7 @@
         <span class="muted">({{ o.type_oeuvre }}, {{ o.date_creation }})</span>
     </li>
     {% else %}
-    <p>Aucun résultat.</p>
+    <p class="muted">Aucun résultat.</p>
     {% endfor %}
 </ul>
 {% endif %}

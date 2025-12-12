@@ -6,10 +6,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
-<body>
+<body class="page-auth">
 
 <header class="site-header">
     <div class="logo">CinéFan</div>
+
     <nav class="main-nav">
         <a href="{{ url_for('accueil') }}">Accueil</a>
         <a href="{{ url_for('connexion') }}">Connexion</a>
@@ -18,31 +19,46 @@
 </header>
 
 <main class="auth-container">
+
     <section class="auth-card">
-        <h2>Créer un compte</h2>
+        <h1>Créer un compte</h1>
 
-        <form action="{{ url_for('inscription') }}" method="post" class="auth-form">
+        <!-- Messages Flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <ul class="flash-messages">
+            {% for category, msg in messages %}
+            <li class="flash {{ category }}">{{ msg }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
 
-            <label>Pseudo
-                <input type="text" name="pseudo" required>
-            </label>
+        <form method="post" class="auth-form">
 
-            <label>Email
-                <input type="email" name="email" required>
-            </label>
+            <div class="form-group">
+                <label for="pseudo">Pseudo</label>
+                <input type="text" id="pseudo" name="pseudo" required>
+            </div>
 
-            <label>Mot de passe (8 caractères)
-                <input type="password" name="mdp" minlength="8" maxlength="8" required>
-            </label>
+            <div class="form-group">
+                <label for="email">Adresse e-mail</label>
+                <input type="email" id="email" name="email" required placeholder="vous@example.com">
+            </div>
 
-            <button type="submit">Créer mon compte</button>
+            <div class="form-group">
+                <label for="mdp">Mot de passe</label>
+                <input type="password" id="mdp" name="mdp" required placeholder="Votre mot de passe">
+            </div>
+
+            <button type="submit" class="btn-primary">Créer mon compte</button>
         </form>
 
         <p class="auth-alt">
-            Déjà inscrit ?
-            <a href="{{ url_for('connexion') }}">Se connecter</a>.
+            Déjà inscrit ? <a href="{{ url_for('connexion') }}">Se connecter</a>.
         </p>
     </section>
+
 </main>
 
 </body>

@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Œuvres – CinéFan</title>
+    <title>Artistes – CinéFan</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
@@ -10,11 +10,12 @@
 
 <header class="site-header">
     <div class="logo">CinéFan</div>
+
     <nav class="main-nav">
         <a href="{{ url_for('accueil') }}">Accueil</a>
-        <a href="{{ url_for('oeuvres') }}" class="active">Œuvres</a>
+        <a href="{{ url_for('oeuvres') }}">Œuvres</a>
+        <a href="{{ url_for('artistes') }}" class="active">Artistes</a>
         <a href="{{ url_for('recherche') }}">Recherche</a>
-        <a href="{{ url_for('artistes') }}">Artistes</a>
 
         {% if session.get('user_id') %}
             <a href="{{ url_for('favoris') }}">Mes favoris</a>
@@ -33,18 +34,18 @@
 
 <main>
 
-<h2>Toutes les œuvres</h2>
+<h1>Liste des artistes</h1>
 
 <ul class="list">
-    {% for o in oeuvres %}
+    {% for a in artistes %}
     <li>
-        <a href="{{ url_for('oeuvre_detail', id_oeuvre=o.id_oeuvre) }}">
-            {{ o.titre }}
+        <a href="{{ url_for('artiste_detail', id_artiste=a.id_artiste) }}">
+            {{ a.prenom }} {{ a.nom }}
         </a>
-        <span class="muted">({{ o.type_oeuvre }}, {{ o.date_creation }})</span>
+        <span class="muted">(né le {{ a.date_naissance }})</span>
     </li>
     {% else %}
-    <p class="muted">Aucune œuvre trouvée.</p>
+    <p>Aucun artiste trouvé.</p>
     {% endfor %}
 </ul>
 

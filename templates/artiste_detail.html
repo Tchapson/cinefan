@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Œuvres – CinéFan</title>
+    <title>{{ artiste.prenom }} {{ artiste.nom }} – CinéFan</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
@@ -10,11 +10,12 @@
 
 <header class="site-header">
     <div class="logo">CinéFan</div>
+
     <nav class="main-nav">
         <a href="{{ url_for('accueil') }}">Accueil</a>
-        <a href="{{ url_for('oeuvres') }}" class="active">Œuvres</a>
+        <a href="{{ url_for('oeuvres') }}">Œuvres</a>
         <a href="{{ url_for('recherche') }}">Recherche</a>
-        <a href="{{ url_for('artistes') }}">Artistes</a>
+        <a href="{{ url_for('artistes') }}" class="active">Artistes</a>
 
         {% if session.get('user_id') %}
             <a href="{{ url_for('favoris') }}">Mes favoris</a>
@@ -33,20 +34,49 @@
 
 <main>
 
-<h2>Toutes les œuvres</h2>
+<h1>{{ artiste.prenom }} {{ artiste.nom }}</h1>
 
+<p class="muted">Né le {{ artiste.date_naissance }}</p>
+
+{% if artiste.biographie %}
+<p>{{ artiste.biographie }}</p>
+{% endif %}
+
+<hr>
+
+{% if oeuvres_realisees %}
+<h2>Réalisateur</h2>
 <ul class="list">
-    {% for o in oeuvres %}
+    {% for o in oeuvres_realisees %}
     <li>
         <a href="{{ url_for('oeuvre_detail', id_oeuvre=o.id_oeuvre) }}">
             {{ o.titre }}
         </a>
         <span class="muted">({{ o.type_oeuvre }}, {{ o.date_creation }})</span>
     </li>
-    {% else %}
-    <p class="muted">Aucune œuvre trouvée.</p>
     {% endfor %}
 </ul>
+{% endif %}
+
+{% if oeuvres_jouees %}
+<h2>Acteur</h2>
+<ul class="list">
+    {% for o in oeuvres_jouees %}
+    <li>
+        <a href="{{ url_for('oeuvre_detail', id_oeuvre=o.id_oeuvre) }}">
+            {{ o.titre }}
+        </a>
+        <span class="muted">
+            ({{ o.type_oeuvre }}, {{ o.date_creation }}) – rôle : {{ o.personnage }}
+        </span>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% if not oeuvres_realisees and not oeuvres_jouees %}
+<p class="muted">Aucune œuvre répertoriée pour cet artiste.</p>
+{% endif %}
 
 </main>
 

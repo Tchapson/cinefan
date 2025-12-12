@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Œuvres – CinéFan</title>
+    <title>Mes Favoris – CinéFan</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
@@ -10,14 +10,14 @@
 
 <header class="site-header">
     <div class="logo">CinéFan</div>
+
     <nav class="main-nav">
         <a href="{{ url_for('accueil') }}">Accueil</a>
-        <a href="{{ url_for('oeuvres') }}" class="active">Œuvres</a>
+        <a href="{{ url_for('oeuvres') }}">Œuvres</a>
         <a href="{{ url_for('recherche') }}">Recherche</a>
-        <a href="{{ url_for('artistes') }}">Artistes</a>
 
         {% if session.get('user_id') %}
-            <a href="{{ url_for('favoris') }}">Mes favoris</a>
+            <a href="{{ url_for('favoris') }}" class="active">Mes favoris</a>
             <a href="{{ url_for('profil') }}" class="user-tag">
                 👤 {{ session['pseudo'] }}
             </a>
@@ -33,18 +33,20 @@
 
 <main>
 
-<h2>Toutes les œuvres</h2>
+<h1>Mes favoris</h1>
 
 <ul class="list">
-    {% for o in oeuvres %}
+    {% for f in favoris %}
     <li>
-        <a href="{{ url_for('oeuvre_detail', id_oeuvre=o.id_oeuvre) }}">
-            {{ o.titre }}
+        <a href="{{ url_for('oeuvre_detail', id_oeuvre=f.id_oeuvre) }}">
+            {{ f.titre }}
         </a>
-        <span class="muted">({{ o.type_oeuvre }}, {{ o.date_creation }})</span>
+        <span class="muted">
+            ({{ f.type_oeuvre }}, {{ f.date_creation }} – ajouté le {{ f.date_ajout }})
+        </span>
     </li>
     {% else %}
-    <p class="muted">Aucune œuvre trouvée.</p>
+    <p class="muted">Vous n’avez encore ajouté aucune œuvre en favori.</p>
     {% endfor %}
 </ul>
 

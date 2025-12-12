@@ -12,16 +12,28 @@
     <div class="logo">CinéFan</div>
     <nav class="main-nav">
         <a href="{{ url_for('accueil') }}">Accueil</a>
+        <a href="{{ url_for('oeuvres') }}">Œuvres</a>
         <a href="{{ url_for('recherche') }}">Recherche</a>
-        <a href="{{ url_for('connexion') }}">Connexion</a>
-        <a href="{{ url_for('inscription') }}">Inscription</a>
+        <a href="{{ url_for('artistes') }}">Artistes</a>
+
+        {% if session.get('user_id') %}
+            <a href="{{ url_for('favoris') }}">Mes favoris</a>
+            <span class="user-tag">👤 {{ session['pseudo'] }}</span>
+            <form action="{{ url_for('deconnexion') }}" method="post" style="display:inline;">
+                <button type="submit" class="logout-btn">Déconnexion</button>
+            </form>
+
+        {% else %}
+            <a href="{{ url_for('connexion') }}">Connexion</a>
+            <a href="{{ url_for('inscription') }}">Inscription</a>
+        {% endif %}
     </nav>
 </header>
 
 <main class="error-container">
-    <h2>Page non trouvée</h2>
-    <p>La page demandée n'existe pas ou a été déplacée.</p>
-    <p><a href="{{ url_for('accueil') }}" style="color:#facc15;">Retour à l'accueil</a></p>
+    <h2>404 – Page non trouvée</h2>
+    <p>La page que vous cherchez n'existe pas ou a été déplacée.</p>
+    <p><a class="link" href="{{ url_for('accueil') }}">← Retour à l'accueil</a></p>
 </main>
 
 </body>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Accueil – CinéFan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<header class="site-header">
+    <div class="logo">CinéFan</div>
+
+    <nav class="main-nav">
+        <a href="{{ url_for('accueil') }}" class="active">Accueil</a>
+        <a href="{{ url_for('oeuvres') }}">Œuvres</a>
+        <a href="{{ url_for('recherche') }}">Recherche</a>
+        <a href="{{ url_for('artistes') }}">Artistes</a>
+
+        {% if session.get('user_id') %}
+            <a href="{{ url_for('favoris') }}">Mes favoris</a>
+            <a href="{{ url_for('profil') }}" class="user-tag">
+                👤 {{ session['pseudo'] }}
+            </a>
+
+            <form action="{{ url_for('deconnexion') }}" method="post" style="display:inline;">
+                <button type="submit" class="logout-btn">Déconnexion</button>
+            </form>
+        {% else %}
+            <a href="{{ url_for('connexion') }}">Connexion</a>
+            <a href="{{ url_for('inscription') }}">Inscription</a>
+        {% endif %}
+    </nav>
+</header>
+
+
+<main>
+
+    <h1>Bienvenue sur CinéFan 🎬</h1>
+
+    <p class="muted">
+        La base de données des films, séries, acteurs et univers que vous adorez.
+    </p>
+
+    <section class="stats">
+        <div class="stat-card">
+            <strong>{{ nb_oeuvres }}</strong>
+            <span>Œuvres</span>
+        </div>
+        <div class="stat-card">
+            <strong>{{ nb_artistes }}</strong>
+            <span>Artistes</span>
+        </div>
+        <div class="stat-card">
+            <strong>{{ nb_commentaires }}</strong>
+            <span>Commentaires</span>
+        </div>
+    </section>
+
+    <hr>
+
+    <h2>Dernières œuvres ajoutées</h2>
+
+    <ul class="list">
+        {% for o in oeuvres_recent %}
+        <li>
+            <a href="{{ url_for('oeuvre_detail', id_oeuvre=o.id_oeuvre) }}">
+                {{ o.titre }}
+            </a>
+            <span class="muted">
+                ({{ o.type_oeuvre }}, {{ o.date_creation }})
+            </span>
+        </li>
+        {% else %}
+        <p>Aucune œuvre disponible.</p>
+        {% endfor %}
+    </ul>
+
+</main>
+
+</body>
+</html>

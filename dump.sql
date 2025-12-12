@@ -30,9 +30,10 @@ CREATE TABLE utilisateur(
     id_utilisateur serial PRIMARY KEY,
     pseudo varchar(50) NOT NULL,
     email varchar(50) UNIQUE NOT NULL,
-    mdp char(8) NOT NULL,
+    mdp TEXT NOT NULL,
     role_utilisateur varchar(10) DEFAULT 'user'
 );
+
 
 CREATE TABLE oeuvre(
     id_oeuvre serial PRIMARY KEY,

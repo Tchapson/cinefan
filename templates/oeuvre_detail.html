@@ -10,27 +10,43 @@
 
 <header class="site-header">
     <div class="logo">CinéFan</div>
+
     <nav class="main-nav">
         <a href="{{ url_for('accueil') }}">Accueil</a>
         <a href="{{ url_for('oeuvres') }}">Œuvres</a>
         <a href="{{ url_for('recherche') }}">Recherche</a>
+        <a href="{{ url_for('artistes') }}">Artistes</a>
+
+        {% if session.get('user_id') %}
+            <a href="{{ url_for('favoris') }}">Mes favoris</a>
+            <a href="{{ url_for('profil') }}" class="user-tag">
+                👤 {{ session['pseudo'] }}
+            </a>
+            <form action="{{ url_for('deconnexion') }}" method="post" style="display:inline;">
+                <button type="submit" class="logout-btn">Déconnexion</button>
+            </form>
+        {% else %}
+            <a href="{{ url_for('connexion') }}">Connexion</a>
+            <a href="{{ url_for('inscription') }}">Inscription</a>
+        {% endif %}
     </nav>
 </header>
 
 <main>
 
-<h2>{{ oeuvre.titre }}</h2>
+<h1>{{ oeuvre.titre }}</h1>
 
 <p class="muted">
     {{ oeuvre.type_oeuvre }}
     {% if oeuvre.numero_volet_saison %}
-      – Volet/saison n° {{ oeuvre.numero_volet_saison }}
+        – Volet/saison n° {{ oeuvre.numero_volet_saison }}
     {% endif %}
     – {{ oeuvre.date_creation }}
 </p>
 
 {% if genres %}
-<p><strong>Genres :</strong>
+<p>
+    <strong>Genres :</strong>
     {% for g in genres %}
         {{ g.nom_cat }}{% if not loop.last %}, {% endif %}
     {% endfor %}
@@ -41,9 +57,14 @@
 <p>{{ oeuvre.description_oeuvre }}</p>
 {% endif %}
 
+<hr>
+
+<!-- ======================== -->
+<!--       RÉALISATEURS       -->
+<!-- ======================== -->
 {% if realisateurs %}
 <h3>Réalisateur(s)</h3>
-<ul>
+<ul class="list">
     {% for r in realisateurs %}
     <li>
         <a href="{{ url_for('artiste_detail', id_artiste=r.id_artiste) }}">
@@ -54,23 +75,29 @@
 </ul>
 {% endif %}
 
+<!-- ======================== -->
+<!--         ACTEURS          -->
+<!-- ======================== -->
 {% if acteurs %}
 <h3>Acteurs & personnages</h3>
-<ul>
+<ul class="list">
     {% for a in acteurs %}
     <li>
         <a href="{{ url_for('artiste_detail', id_artiste=a.id_artiste) }}">
             {{ a.prenom }} {{ a.nom }}
         </a>
-        en <em>{{ a.personnage }}</em>
+        — <em>{{ a.personnage }}</em>
     </li>
     {% endfor %}
 </ul>
 {% endif %}
 
+<!-- ======================== -->
+<!--      LIENS ENTRE OEUVRES -->
+<!-- ======================== -->
 {% if liens %}
 <h3>Liens avec d'autres œuvres</h3>
-<ul>
+<ul class="list">
     {% for l in liens %}
     <li>
         {{ l.type_lien }} :
@@ -82,23 +109,37 @@
 </ul>
 {% endif %}
 
-{% if session.get('user_id') %}
-<form action="{{ url_for('ajouter_favori', id_oeuvre=oeuvre.id_oeuvre) }}" method="post">
-    <button type="submit">
-        {% if est_favori %}Dans vos favoris{% else %}Ajouter aux favoris{% endif %}
-    </button>
-</form>
+<hr>
 
-<h3>Ajouter un commentaire</h3>
-<form action="{{ url_for('ajouter_commentaire', id_oeuvre=oeuvre.id_oeuvre) }}" method="post">
-    <textarea name="contenu" rows="3" placeholder="Votre avis..." required></textarea>
-    <button type="submit">Envoyer</button>
-</form>
+<!-- ======================== -->
+<!--   FAVORIS & COMMENTAIRES -->
+<!-- ======================== -->
+
+{% if session.get('user_id') %}
+
+    {% if est_favori %}
+    <form action="{{ url_for('retirer_favori', id_oeuvre=oeuvre.id_oeuvre) }}" method="post">
+        <button type="submit" class="btn-secondary">Retirer des favoris</button>
+    </form>
+    {% else %}
+    <form action="{{ url_for('ajouter_favori', id_oeuvre=oeuvre.id_oeuvre) }}" method="post">
+        <button type="submit" class="btn-primary">Ajouter aux favoris</button>
+    </form>
+    {% endif %}
+
+
+    <h3>Ajouter un commentaire</h3>
+    <form action="{{ url_for('ajouter_commentaire', id_oeuvre=oeuvre.id_oeuvre) }}" method="post">
+        <textarea name="contenu" rows="3" placeholder="Votre avis..." required></textarea>
+        <button type="submit">Envoyer</button>
+    </form>
+
 {% else %}
-<p>
-    <a href="{{ url_for('connexion') }}">Connectez-vous</a>
-    pour commenter ou ajouter aux favoris.
+
+<p class="muted">
+    <a href="{{ url_for('connexion') }}">Connectez-vous</a> pour commenter ou ajouter aux favoris.
 </p>
+
 {% endif %}
 
 <h3>Commentaires</h3>

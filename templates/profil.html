@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Œuvres – CinéFan</title>
+    <title>Mon Profil – CinéFan</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
@@ -10,14 +10,16 @@
 
 <header class="site-header">
     <div class="logo">CinéFan</div>
+
     <nav class="main-nav">
         <a href="{{ url_for('accueil') }}">Accueil</a>
-        <a href="{{ url_for('oeuvres') }}" class="active">Œuvres</a>
+        <a href="{{ url_for('oeuvres') }}">Œuvres</a>
         <a href="{{ url_for('recherche') }}">Recherche</a>
         <a href="{{ url_for('artistes') }}">Artistes</a>
 
         {% if session.get('user_id') %}
             <a href="{{ url_for('favoris') }}">Mes favoris</a>
+            <a href="{{ url_for('profil') }}" class="active">Profil</a>
             <a href="{{ url_for('profil') }}" class="user-tag">
                 👤 {{ session['pseudo'] }}
             </a>
@@ -33,20 +35,28 @@
 
 <main>
 
-<h2>Toutes les œuvres</h2>
+<h1>Mon Profil</h1>
 
-<ul class="list">
-    {% for o in oeuvres %}
-    <li>
-        <a href="{{ url_for('oeuvre_detail', id_oeuvre=o.id_oeuvre) }}">
-            {{ o.titre }}
-        </a>
-        <span class="muted">({{ o.type_oeuvre }}, {{ o.date_creation }})</span>
-    </li>
-    {% else %}
-    <p class="muted">Aucune œuvre trouvée.</p>
-    {% endfor %}
-</ul>
+<section class="profile-section">
+    <h2>Informations personnelles</h2>
+    <p><strong>Pseudo :</strong> {{ user.pseudo }}</p>
+    <p><strong>Email :</strong> {{ user.email }}</p>
+    <p><strong>Rôle :</strong> {{ user.role_utilisateur }}</p>
+</section>
+
+<hr>
+
+<section class="profile-section">
+    <h2>Statistiques</h2>
+    <p><strong>Favoris :</strong> {{ nb_favoris }}</p>
+    <p><strong>Commentaires :</strong> {{ nb_commentaires }}</p>
+</section>
+
+<hr>
+
+<section>
+    <a class="btn-primary" href="{{ url_for('deconnexion') }}">Se déconnecter</a>
+</section>
 
 </main>
 
