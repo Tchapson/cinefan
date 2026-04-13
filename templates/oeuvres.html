@@ -1,54 +1,381 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Œuvres – CinéFan</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
+﻿{% extends 'base.html' %}
 
-<body>
+{% block title %}Bibliothèque - CinéFan{% endblock %}
 
-<header class="site-header">
-    <div class="logo">CinéFan</div>
-    <nav class="main-nav">
-        <a href="{{ url_for('accueil') }}">Accueil</a>
-        <a href="{{ url_for('oeuvres') }}" class="active">Œuvres</a>
-        <a href="{{ url_for('recherche') }}">Recherche</a>
-        <a href="{{ url_for('artistes') }}">Artistes</a>
+{% block content %}
+<div class="library-page page-bibliotheque">
+    <div class="library-header entete-bibliotheque">
+        <h1 class="library-title titre-bibliotheque">
+            <span class="material-symbols-outlined">local_library</span>
+            Bibliothèque
+        </h1>
+        <div class="library-tabs onglets-bibliotheque">
+            <div class="tabs-row ligne-onglets">
+                <button class="tab-btn active" data-type="all">Tout</button>
+                <button class="tab-btn" data-type="film">Films</button>
+                <button class="tab-btn" data-type="serie">Séries</button>
+                <button class="tab-btn" data-type="anime">Anime</button>
+            </div>
+            <div class="tabs-row ligne-onglets">
+                <button class="tab-btn" data-type="personnage">Personnages</button>
+                <button class="tab-btn" data-type="acteur">Acteurs</button>
+                <button class="tab-btn" data-type="realisateur">Réalisateurs</button>
+            </div>
+        </div>
+        <div class="library-sort tri-bibliotheque">
+            <select id="sortSelect" name="tri" form="filterForm">
+                <option value="populaire" {% if current_tri == 'populaire' %}selected{% endif %}>Par popularité</option>
+                <option value="recent" {% if current_tri == 'recent' %}selected{% endif %}>Plus récents</option>
+                <option value="note" {% if current_tri == 'note' %}selected{% endif %}>Meilleures notes</option>
+                <option value="titre" {% if current_tri == 'titre' %}selected{% endif %}>Alphabétique</option>
+            </select>
+        </div>
+    </div>
 
-        {% if session.get('user_id') %}
-            <a href="{{ url_for('favoris') }}">Mes favoris</a>
-            <a href="{{ url_for('profil') }}" class="user-tag">
-                👤 {{ session['pseudo'] }}
-            </a>
-            <form action="{{ url_for('deconnexion') }}" method="post" style="display:inline;">
-                <button type="submit" class="logout-btn">Déconnexion</button>
-            </form>
-        {% else %}
-            <a href="{{ url_for('connexion') }}">Connexion</a>
-            <a href="{{ url_for('inscription') }}">Inscription</a>
+    <div class="library-content contenu-bibliotheque">
+        <div class="library-grid grille-bibliotheque media-grid" id="oeuvresGrid">
+            {% include 'partiels/oeuvre_cards.html' %}
+        </div>
+
+        <div class="library-grid grille-bibliotheque people-grid grille-personnes" style="display:none;">
+            {% if people_items %}
+            {% for p in people_items %}
+            <div class="library-card people-card carte-personne" data-type="{{ p.type }}" data-meta="{{ p.meta }}">
+                <div class="people-placeholder">
+                    <img src="{{ url_for('static', filename='images/personnage.jpeg') }}" alt="Portrait" class="people-photo">
+                </div>
+                <div class="card-info">
+                    <h3 class="card-title">{{ p.nom }}</h3>
+                    <p class="card-year">{{ p.meta }}</p>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            {% set placeholders = [
+                {'nom':'Personnage', 'type':'personnage'},
+                {'nom':'Acteur', 'type':'acteur'},
+                {'nom':'Réalisateur', 'type':'realisateur'}
+            ] %}
+            {% for p in placeholders %}
+            <div class="library-card people-card carte-personne" data-type="{{ p.type }}">
+                <div class="people-placeholder">
+                    <img src="{{ url_for('static', filename='images/personnage.jpeg') }}" alt="Portrait" class="people-photo">
+                </div>
+                <div class="card-info">
+                    <h3 class="card-title">{{ p.nom }}</h3>
+                    <p class="card-year">Biographie disponible</p>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+
+        <aside class="filters-panel panneau-filtres">
+            <form id="filterForm" method="get" action="{{ url_for('oeuvres') }}">
+                <div class="filters-header entete-filtres">
+                    <span class="material-symbols-outlined">tune</span>
+                    <h3>Filtre</h3>
+                    <button class="btn-reset mini" type="button" onclick="resetFilters()"><span class="material-symbols-outlined">restart_alt</span> Réinitialiser</button>
+                </div>
+
+                <div class="filter-section section-filtre">
+                    <h4>Types</h4>
+                    <div class="filter-options options-filtre two-col deux-colonnes">
+                        {% if types %}
+                        {% for t in types %}
+                        {% set val = (t.type_oeuvre or t.nom_type)|lower|replace('é','e') %}
+                        <label class="filter-checkbox">
+                            <input type="radio" name="type" value="{{ val }}" {% if current_type and current_type|lower|replace('é','e') == val %}checked{% endif %}>
+                            <span class="checkmark"></span>
+                            {{ (t.type_oeuvre or t.nom_type)|capitalize }}
+                        </label>
+                        {% endfor %}
+                        {% else %}
+                        <div class="muted">Aucun type</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="filter-section section-filtre">
+                    <h4>Genre</h4>
+                    <input type="text" id="genreSearch" placeholder="Rechercher un genre..." class="profile-input" style="margin-bottom:10px;">
+                    <div class="filter-options options-filtre" id="genreList">
+                        {% if genres %}
+                        {% for genre in genres %}
+                        <label class="filter-checkbox genre-item {{ 'extra-genre' if loop.index > 8 else '' }}">
+                            <input type="checkbox" name="genre" value="{{ genre.id }}" {% if current_genres and (genre.id|string) in current_genres %}checked{% endif %}>
+                            <span class="checkmark"></span>
+                            {{ genre.nom }}
+                        </label>
+                        {% endfor %}
+                        {% else %}
+                        <div class="muted">Aucun genre</div>
+                        {% endif %}
+                    </div>
+                    <button type="button" class="btn-secondary show-more-genres" id="toggleGenres">Afficher plus</button>
+                </div>
+
+                <div class="filter-section section-filtre">
+                    <h4>Année</h4>
+                    <div class="year-range">
+                        <input type="number" name="annee_min" id="yearFrom" placeholder="De" min="1900" max="2025" value="{{ annee_min or '' }}">
+                        <span>à</span>
+                        <input type="number" name="annee_max" id="yearTo" placeholder="À" min="1900" max="2025" value="{{ annee_max or '' }}">
+                    </div>
+                </div>
+
+                <div class="filter-section section-filtre">
+                    <h4>Note minimum</h4>
+                    <div class="rating-filter">
+                        {% set note_value = current_note if current_note is not none else 0 %}
+                        <input type="range" name="note_min" id="minRating" min="0" max="10" step="0.5" value="{{ note_value }}">
+                        <span id="ratingValue">{{ note_value }}</span>/10
+                    </div>
+                </div>
+
+                </form>
+        </aside>
+    </div>
+
+    <div class="pagination" id="pagination">
+        {% if total_pages > 1 %}
+            {% include 'partiels/pagination.html' %}
         {% endif %}
-    </nav>
-</header>
+    </div>
+</div>
 
-<main>
+<script>
+const formulaire = document.getElementById('filterForm');
+const grille = document.getElementById('oeuvresGrid');
+const pagination = document.getElementById('pagination');
+const triSelect = document.getElementById('sortSelect');
+const noteCurseur = document.getElementById('minRating');
+const noteAffichage = document.getElementById('ratingValue');
+const genreEntree = document.getElementById('genreSearch');
+const btnGenres = document.getElementById('toggleGenres');
+const grillePeople = document.querySelector('.people-grid');
+const grilleMedia = document.querySelector('.media-grid');
 
-<h2>Toutes les œuvres</h2>
+function activerTabulation() {
+  const boutons = document.querySelectorAll('.tab-btn');
+  
+  boutons.forEach(bouton => {
+    bouton.addEventListener('click', function() {
+      boutons.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      const typeTab = this.dataset.type; 
+      if (typeTab === 'personnage' || typeTab === 'acteur' || typeTab === 'realisateur') {
+        grillePeople.style.display = 'grid';
+        grilleMedia.style.display = 'none';
+        const cartes = document.querySelectorAll('.people-card');
+        cartes.forEach(carte => {
+          if (carte.dataset.type === typeTab) {
+            carte.style.display = 'block';
+          } else {
+            carte.style.display = 'none';
+          }
+        });
+      } else {
+        grillePeople.style.display = 'none';
+        grilleMedia.style.display = 'grid';
+        chargerOeuvres(1);
+      }
+    });
+  });
+}
 
-<ul class="list">
-    {% for o in oeuvres %}
-    <li>
-        <a href="{{ url_for('oeuvre_detail', id_oeuvre=o.id_oeuvre) }}">
-            {{ o.titre }}
-        </a>
-        <span class="muted">({{ o.type_oeuvre }}, {{ o.date_creation }})</span>
-    </li>
-    {% else %}
-    <p class="muted">Aucune œuvre trouvée.</p>
-    {% endfor %}
-</ul>
+async function chargerOeuvres(numeroPage) {
+  if (!formulaire || !grille) return;
+  const donnees = new FormData(formulaire);
+  donnees.set('page', numeroPage);
+  const params = new URLSearchParams();
+  donnees.forEach((valeur, cle) => {
+    if (valeur !== '' && valeur !== null) {
+      params.append(cle, valeur);
+    }
+  });
+  params.set('format', 'json');
+  
+  grille.classList.add('loading');
+  
+  try {
+    const reponse = await fetch(formulaire.action + '?' + params.toString(), {
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    if (!reponse.ok) {
+      throw new Error('Erreur de chargement');
+    }
+    
+    const donnees = await reponse.json();
+    grille.innerHTML = donnees.html || '';
 
-</main>
+    if (pagination) {
+      pagination.innerHTML = donnees.pagination || '';
+      connecterBoutonsPage();
+    }
+    const header = document.querySelector('.library-content');
+    if (header) {
+      window.scrollTo({
+        top: header.offsetTop - 40,
+        behavior: 'smooth'
+      });
+    }
+    
+  } catch (erreur) {
+    console.error('Problème :', erreur);
+    grille.innerHTML = '<p>Erreur lors du chargement</p>';
+  } finally {
+    grille.classList.remove('loading');
+  }
+}
 
-</body>
-</html>
+function connecterBoutonsPage() {
+  if (!pagination) return;
+  const liens = pagination.querySelectorAll('a[data-page]');
+  liens.forEach(lien => {
+    lien.addEventListener('click', function(evenement) {
+      evenement.preventDefault();
+      const page = parseInt(this.dataset.page, 10);
+      chargerOeuvres(page);
+    });
+  });
+}
+
+if (genreEntree) {
+  genreEntree.addEventListener('input', function() {
+    const texteRecherche = this.value.toLowerCase();
+    const labels = document.querySelectorAll('#genreList label');
+    labels.forEach(label => {
+      const texteLabel = label.textContent.toLowerCase();
+      if (texteLabel.includes(texteRecherche)) {
+        label.style.display = 'flex';
+      } else {
+        label.style.display = 'none';
+      }
+    });
+  });
+}
+
+if (btnGenres) {
+  btnGenres.addEventListener('click', function() {
+    const genresExtras = document.querySelectorAll('.extra-genre');
+    
+    genresExtras.forEach(el => {
+      el.classList.toggle('shown');
+    });
+    let ilYaDesCaches = false;
+    genresExtras.forEach(el => {
+      if (!el.classList.contains('shown')) {
+        ilYaDesCaches = true;
+      }
+    });
+
+    if (ilYaDesCaches) {
+      btnGenres.textContent = 'Afficher plus';
+    } else {
+      btnGenres.textContent = 'Afficher moins';
+    }
+  });
+}
+
+
+if (noteCurseur && noteAffichage) {
+  noteAffichage.textContent = noteCurseur.value;
+  noteCurseur.addEventListener('input', function() {
+    noteAffichage.textContent = this.value;
+  });
+}
+
+if (formulaire) {
+  const champsFiltres = formulaire.querySelectorAll('input, select');
+  
+  champsFiltres.forEach(champ => {
+    if (champ.id !== 'genreSearch') {
+      
+      const typeEvenement = champ.type === 'range' ? 'input' : 'change';
+      champ.addEventListener(typeEvenement, function() {
+        chargerOeuvres(1); 
+      });
+    }
+  });
+  formulaire.addEventListener('submit', function(e) {
+    e.preventDefault();
+    chargerOeuvres(1);
+  });
+}
+if (triSelect) {
+  triSelect.addEventListener('change', function() {
+    chargerOeuvres(1);
+  });
+}
+
+function reinitialiserFiltres() {
+  if (!formulaire) return;
+  formulaire.reset();
+  const inputs = formulaire.querySelectorAll('input[name="type"]');
+  inputs.forEach(inp => inp.checked = false);
+  const tabs = document.querySelectorAll('.tab-btn');
+  tabs.forEach(t => t.classList.remove('active'));
+  
+  const tabTous = document.querySelector('.tab-btn[data-type="all"]');
+  if (tabTous) {
+    tabTous.classList.add('active');
+  }
+  
+  if (noteCurseur && noteAffichage) {
+    noteAffichage.textContent = noteCurseur.value;
+  }
+  
+  if (triSelect) {
+    triSelect.value = 'populaire';
+  }
+  
+  if (grilleMedia) {
+    grilleMedia.style.display = 'grid';
+  }
+  if (grillePeople) {
+    grillePeople.style.display = 'none';
+  }
+  
+  chargerOeuvres(1);
+}
+
+const modal = document.createElement('div');
+modal.className = 'people-modal';
+modal.setAttribute('hidden', '');
+modal.innerHTML = `
+  <div class="people-modal-backdrop"></div>
+  <div class="people-modal-card">
+    <button class="modal-close" aria-label="Fermer">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    <h3 id="peopleModalTitle">Profil</h3>
+    <p class="muted" id="peopleModalMeta">Biographie Ã  venir...</p>
+  </div>
+`;
+document.body.appendChild(modal);
+function fermerModal() {
+  modal.setAttribute('hidden', '');
+}
+
+modal.querySelector('.people-modal-backdrop').addEventListener('click', fermerModal);
+modal.querySelector('.modal-close').addEventListener('click', fermerModal);
+
+const cartesPeople = document.querySelectorAll('.people-card');
+cartesPeople.forEach(carte => {
+  carte.addEventListener('click', function() {
+    const titre = this.querySelector('.card-title');
+    const nom = titre ? titre.textContent : 'Inconnu';
+    const bio = this.dataset.meta || 'Biographie disponible prochainement.';
+    modal.querySelector('#peopleModalTitle').textContent = nom;
+    modal.querySelector('#peopleModalMeta').textContent = bio;
+    modal.removeAttribute('hidden');
+  });
+});
+activerTabulation();
+connecterBoutonsPage();
+
+</script>
+{% endblock %}
+

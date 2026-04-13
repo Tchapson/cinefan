@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Statistiques - CinéFan{% endblock %}
+
+{% block content %}
+<section class="page-statistiques">
+    <div class="section-header">
+        <h1 class="section-title">Statistiques du site</h1>
+    </div>
+    <div class="cartes-statistiques">
+        <div class="bloc-statistique">
+            <div class="etiquette-stat">Œuvres</div>
+            <div class="valeur-stat">{{ stats.nb_oeuvres if stats else 0 }}</div>
+        </div>
+        <div class="bloc-statistique">
+            <div class="etiquette-stat">Artistes</div>
+            <div class="valeur-stat">{{ stats.nb_artistes if stats else 0 }}</div>
+        </div>
+        <div class="bloc-statistique">
+            <div class="etiquette-stat">Utilisateurs</div>
+            <div class="valeur-stat">{{ stats.nb_utilisateurs if stats else 0 }}</div>
+        </div>
+        <div class="bloc-statistique">
+            <div class="etiquette-stat">Commentaires</div>
+            <div class="valeur-stat">{{ stats.nb_commentaires if stats else 0 }}</div>
+        </div>
+    </div>
+
+    <div class="card-slab">
+        <div class="card-slab-header">
+            <h2>Activité des utilisateurs</h2>
+        </div>
+        <div class="grille-utilisateurs">
+            {% for u in stats_users[:12] %}
+            <div class="carte-utilisateur">
+                <div class="avatar-utilisateur">{{ u.pseudo[:1]|upper }}</div>
+                <div class="corps-utilisateur">
+                    <div class="nom-utilisateur">{{ u.pseudo }}</div>
+                    <div class="meta-utilisateur">
+                        <span class="meta-item"><span class="material-symbols-outlined">chat</span>{{ u.nb_commentaires }}</span>
+                        <span class="meta-item"><span class="material-symbols-outlined">bookmark</span>{{ u.nb_favoris }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% if not stats_users %}
+            <div class="empty-state">Aucune donnée</div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if user_stats %}
+    <div class="card-slab">
+        <div class="card-slab-header">
+            <h2>Vos stats</h2>
+        </div>
+        <div class="cartes-statistiques">
+            <div class="bloc-statistique"><div class="etiquette-stat">Pseudo</div><div class="valeur-stat">{{ user_stats.pseudo }}</div></div>
+            <div class="bloc-statistique"><div class="etiquette-stat">Favoris</div><div class="valeur-stat">{{ user_stats.favoris }}</div></div>
+            <div class="bloc-statistique"><div class="etiquette-stat">Notes</div><div class="valeur-stat">{{ user_stats.notes }}</div></div>
+            {% if user_stats.derniere_note %}
+            <div class="bloc-statistique">
+                <div class="etiquette-stat">Dernière note</div>
+                <div class="valeur-stat">{{ user_stats.derniere_note.note }}</div>
+                <div class="stat-meta">{{ user_stats.derniere_note.titre }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card-slab">
+        <div class="card-slab-header">
+            <h2>Top œuvres (notes)</h2>
+        </div>
+        <div class="grille-cartes-stat">
+            {% for o in top_oeuvres %}
+            <a class="carte-statistique" href="{{ url_for('oeuvre_detail', id_oeuvre=o.id) }}">
+                <div class="vignette-stat">
+                    {% if o.photo %}
+                    <img src="{{ o.photo }}" alt="{{ o.titre }}">
+                    {% else %}
+                    <span class="material-symbols-outlined">movie</span>
+                    {% endif %}
+                </div>
+                <div class="corps-carte-stat">
+                    <div class="titre-carte-stat">{{ o.titre }}</div>
+                    <div class="meta-carte-stat">{{ o.type }}</div>
+                    {% if o.note %}<div class="note-carte-stat"><span class="material-symbols-outlined">star</span>{{ "%.2f"|format(o.note) }}</div>{% endif %}
+                </div>
+            </a>
+            {% endfor %}
+            {% if not top_oeuvres %}<div class="empty-state">Aucune donnée</div>{% endif %}
+        </div>
+    </div>
+
+    <div class="card-slab">
+        <div class="card-slab-header">
+            <h2>Top œuvres commentées</h2>
+        </div>
+        <div class="grille-cartes-stat">
+            {% for o in top_commentes %}
+            <a class="carte-statistique" href="{{ url_for('oeuvre_detail', id_oeuvre=o.id) }}">
+                <div class="vignette-stat">
+                    {% if o.photo %}
+                    <img src="{{ o.photo }}" alt="{{ o.titre }}">
+                    {% else %}
+                    <span class="material-symbols-outlined">chat</span>
+                    {% endif %}
+                </div>
+                <div class="corps-carte-stat">
+                    <div class="titre-carte-stat">{{ o.titre }}</div>
+                    <div class="meta-carte-stat">{{ o.type }}</div>
+                    <div class="note-carte-stat"><span class="material-symbols-outlined">chat</span>{{ o.nb_commentaires }}</div>
+                </div>
+            </a>
+            {% endfor %}
+            {% if not top_commentes %}<div class="empty-state">Aucune donnée</div>{% endif %}
+        </div>
+    </div>
+
+    <div class="card-slab">
+        <div class="card-slab-header">
+    <div class="card-slab">
+        <div class="card-slab-header">
+            <h2>Genres les plus discutés</h2>
+        </div>
+        <div class="tableau-statistiques">
+            <div class="ligne-statistique entete-statistique">
+                <div>Genre</div>
+                <div>Moy. commentaires</div>
+                <div>Œuvres</div>
+            </div>
+            {% for g in genres_stats %}
+            <div class="ligne-statistique">
+                <div>{{ g.nom_cat }}</div>
+                <div>{{ "%.2f"|format(g.moyenne_commentaires) }}</div>
+                <div>{{ g.nb_oeuvres }}</div>
+            </div>
+            {% endfor %}
+            {% if not genres_stats %}
+            <div class="ligne-statistique"><div colspan="3">Aucune donnée</div></div>
+            {% endif %}
+        </div>
+        {% if gs_pages > 1 %}
+        <div class="pagination" style="margin-top:12px;">
+            {% if gs_page > 1 %}
+            <a class="page-btn" href="{{ url_for('statistiques', gs_page=gs_page-1, rc_page=rc_page) }}"><span class="material-symbols-outlined">chevron_left</span></a>
+            {% endif %}
+            {% for p in range(1, gs_pages + 1) %}
+                {% if p == gs_page %}
+                <span class="page-btn active">{{ p }}</span>
+                {% elif p == 1 or p == gs_pages or (p >= gs_page - 2 and p <= gs_page + 2) %}
+                <a class="page-btn" href="{{ url_for('statistiques', gs_page=p, rc_page=rc_page) }}">{{ p }}</a>
+                {% elif p == gs_page - 3 or p == gs_page + 3 %}
+                <span class="page-dots">...</span>
+                {% endif %}
+            {% endfor %}
+            {% if gs_page < gs_pages %}
+            <a class="page-btn" href="{{ url_for('statistiques', gs_page=gs_page+1, rc_page=rc_page) }}"><span class="material-symbols-outlined">chevron_right</span></a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="card-slab">
+        <div class="card-slab-header">
+            <h2>Commentaires récents</h2>
+        </div>
+        <div class="tableau-statistiques tableau-commentaires">
+            {% for c in recent_comments %}
+            <div class="ligne-statistique comment-row">
+                <div class="comment-meta">
+                    <div class="comment-user">{{ c.pseudo }}</div>
+                    <div class="comment-work">{{ c.titre }}</div>
+                </div>
+                <div class="comment-text">{{ c.commentaire }}</div>
+            </div>
+            {% endfor %}
+            {% if not recent_comments %}
+            <div class="ligne-statistique"><div>Aucun commentaire récent</div></div>
+            {% endif %}
+        </div>
+        {% if rc_pages > 1 %}
+        <div class="pagination" style="margin-top:12px;">
+            {% if rc_page > 1 %}
+            <a class="page-btn" href="{{ url_for('statistiques', rc_page=rc_page-1, gs_page=gs_page) }}"><span class="material-symbols-outlined">chevron_left</span></a>
+            {% endif %}
+            {% for p in range(1, rc_pages + 1) %}
+                {% if p == rc_page %}
+                <span class="page-btn active">{{ p }}</span>
+                {% elif p == 1 or p == rc_pages or (p >= rc_page - 2 and p <= rc_page + 2) %}
+                <a class="page-btn" href="{{ url_for('statistiques', rc_page=p, gs_page=gs_page) }}">{{ p }}</a>
+                {% elif p == rc_page - 3 or p == rc_page + 3 %}
+                <span class="page-dots">...</span>
+                {% endif %}
+            {% endfor %}
+            {% if rc_page < rc_pages %}
+            <a class="page-btn" href="{{ url_for('statistiques', rc_page=rc_page+1, gs_page=gs_page) }}"><span class="material-symbols-outlined">chevron_right</span></a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

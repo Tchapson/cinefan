@@ -1,0 +1,268 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Admin - CinéFan{% endblock %}
+
+{% block content %}
+<section class="page-statistiques">
+    <div class="section-header">
+        <h1 class="section-title"><span class="material-symbols-outlined">shield_person</span> Tableau de bord Admin</h1>
+    </div>
+
+    <div class="cartes-statistiques">
+        <div class="bloc-statistique"><div class="etiquette-stat">Oeuvres</div><div class="valeur-stat">{{ stats.nb_oeuvres if stats else 0 }}</div></div>
+        <div class="bloc-statistique"><div class="etiquette-stat">Artistes</div><div class="valeur-stat">{{ stats.nb_artistes if stats else 0 }}</div></div>
+        <div class="bloc-statistique"><div class="etiquette-stat">Utilisateurs</div><div class="valeur-stat">{{ stats.nb_utilisateurs if stats else 0 }}</div></div>
+        <div class="bloc-statistique"><div class="etiquette-stat">Commentaires</div><div class="valeur-stat">{{ stats.nb_commentaires if stats else 0 }}</div></div>
+        {% if user_stats %}
+        <div class="bloc-statistique"><div class="etiquette-stat">Vos favoris</div><div class="valeur-stat">{{ user_stats.favoris }}</div></div>
+        <div class="bloc-statistique"><div class="etiquette-stat">Vos notes</div><div class="valeur-stat">{{ user_stats.notes }}</div></div>
+        {% endif %}
+    </div>
+
+    <div class="card-slab panneau-carte two-col deux-colonnes">
+        <div>
+            <div class="card-slab-header entete-carte">
+                <h2>Recherche utilisateur</h2>
+            </div>
+            <form method="get" action="{{ url_for('admin_panel') }}" class="search-box boite-recherche">
+                <input type="text" name="user_search" placeholder="Pseudo ou email..." value="{{ search_user }}">
+                <button type="submit">Chercher</button>
+            </form>
+            <div class="tableau-statistiques tableau-commentaires">
+                {% for u in users_found %}
+                <div class="ligne-statistique comment-row {% if u.role_utilisateur == 'banni' %}banned{% endif %}">
+                    <div class="comment-meta">
+                        <div class="comment-user">{{ u.pseudo }}</div>
+                        <div class="comment-work">{{ u.email }}</div>
+                    </div>
+                    <div class="comment-actions">
+                        <form method="post" action="{{ url_for('admin_ban_user', id_utilisateur=u.id_utilisateur) }}" data-async data-type="ban">
+                            <button type="submit" class="btn-secondary small">Bannir</button>
+                        </form>
+                        <form method="post" action="{{ url_for('admin_unban_user', id_utilisateur=u.id_utilisateur) }}" data-async data-type="unban">
+                            <button type="submit" class="btn-secondary small">Débannir</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if search_user and not users_found %}
+                <div class="ligne-statistique"><div>Aucun utilisateur</div></div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="add-oeuvre-box bloc-ajout-oeuvre">
+            <div class="card-slab-header entete-carte">
+                <h2>Ajouter une oeuvre</h2>
+            </div>
+            <button type="button" class="btn-primary" id="openAddOeuvre">Nouvelle oeuvre</button>
+        </div>
+    </div>
+
+    <div class="card-slab panneau-carte">
+        <div class="card-slab-header entete-carte">
+            <h2>Activité des utilisateurs</h2>
+        </div>
+        <div class="chips-row ligne-puces">
+            {% for u in stats_users[:6] %}
+            <div class="user-chip puce-utilisateur">
+                <span class="chip-avatar avatar-puce">{{ u.pseudo[:2]|upper }}</span>
+                <div class="user-chip-body">
+                    <div class="user-chip-name nom-puce">{{ u.pseudo }}</div>
+                    <div class="user-chip-meta meta-puce"><span class="material-symbols-outlined">chat</span>{{ u.nb_commentaires }} Â· <span class="material-symbols-outlined">bookmark</span>{{ u.nb_favoris }}</div>
+                </div>
+                <div class="comment-actions">
+                    <form method="post" action="{{ url_for('admin_ban_user', id_utilisateur=u.id_utilisateur) }}">
+                        <button type="submit" class="btn-secondary small">Bannir</button>
+                    </form>
+                    <form method="post" action="{{ url_for('admin_unban_user', id_utilisateur=u.id_utilisateur) }}">
+                        <button type="submit" class="btn-secondary small">Débannir</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+            {% if not stats_users %}
+            <div class="empty-state">Aucune donnée</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card-slab panneau-carte">
+        <div class="card-slab-header entete-carte">
+            <h2>Commentaires récents</h2>
+        </div>
+        <form method="get" class="search-box boite-recherche" action="{{ url_for('admin_panel') }}">
+            <input type="text" name="q" placeholder="Rechercher dans les messages..." value="{{ q }}">
+            <button type="submit">Chercher</button>
+            {% if search_user %}<input type="hidden" name="user_search" value="{{ search_user }}">{% endif %}
+        </form>
+        <div id="commentsContainer" data-q="{{ q }}" data-user-search="{{ search_user }}" data-page="{{ page }}">
+            {include 'partiels/admin_comments.html' %}
+            <div class="pagination pagination-commentaires">
+                {% if page > 1 %}
+                <a class="page-btn bouton-page" data-comments-page="{{ page-1 }}" data-q="{{ q }}" data-user-search="{{ search_user|default('') }}"><span class="material-symbols-outlined">chevron_left</span></a>
+                {% endif %}
+                <span class="page-btn bouton-page active">{{ page }}</span>
+                {% if page < total_pages %}
+                <a class="page-btn bouton-page" data-comments-page="{{ page+1 }}" data-q="{{ q }}" data-user-search="{{ search_user|default('') }}"><span class="material-symbols-outlined">chevron_right</span></a>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+
+    <div class="card-slab panneau-carte">
+        <div class="card-slab-header entete-carte">
+            <h2>Modifier une oeuvre</h2>
+        </div>
+        <form method="post" action="{{ url_for('admin_oeuvre_edit') }}" enctype="multipart/form-data" class="bookmarks-filters" style="gap:12px;">
+            <label>Choisir une oeuvre
+                <select class="profile-input" name="id_oeuvre" required>
+                    <option value="">Sélectionner...</option>
+                    {% for o in oeuvres_all %}
+                    <option value="{{ o.id_oeuvre }}">{{ o.titre }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <input class="profile-input" type="text" name="titre" placeholder="Nouveau titre (optionnel)">
+            <input class="profile-input" type="text" name="type_oeuvre" placeholder="Type (film, serie, anime...)">
+            <input class="profile-input" type="date" name="date_creation" placeholder="Date de création">
+            <input class="profile-input" type="text" name="numero_volet_saison" placeholder="Numéro volet/saison">
+            <textarea class="profile-input" name="description" rows="2" placeholder="Description"></textarea>
+            <input class="profile-input" type="file" name="photo_file" accept="image/*">
+            <div class="filter-actions">
+                <button class="btn-apply" type="submit"><span class="material-symbols-outlined">save</span> Enregistrer</button>
+            </div>
+        </form>
+    </div>
+
+</section>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('click', (e) => {
+        const lien = e.target.closest('[data-comments-page]');
+        if (!lien) return;
+        e.preventDefault();
+        mettreAJourCommentaires(lien.dataset.commentsPage, lien.dataset.q, lien.dataset.userSearch);
+    });
+
+    document.addEventListener('submit', (e) => {
+        const formulaire = e.target.closest('form[data-async]');
+        if (!formulaire) return;
+        e.preventDefault();
+        fetch(formulaire.action, { method: formulaire.method || 'POST', body: new FormData(formulaire) })
+          .then(() => {
+            const type = formulaire.dataset.type;
+            if (type === 'comment') {
+                mettreAJourCommentaires();
+            } else if (type === 'ban' || type === 'unban') {
+                const ligne = formulaire.closest('.comment-row, .user-chip');
+                if (ligne && type === 'ban') ligne.classList.add('banned');
+                if (ligne && type === 'unban') ligne.classList.remove('banned');
+            }
+          });
+    });
+
+    const modal = document.createElement('div');
+    modal.className = 'people-modal';
+    modal.setAttribute('hidden','');
+    modal.innerHTML = `
+      <div class="people-modal-backdrop"></div>
+      <div class="people-modal-card">
+        <button class="modal-close" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+        <h3>Nouvelle oeuvre</h3>
+        <form method="post" action="{{ url_for('admin_oeuvre_new') }}" enctype="multipart/form-data">
+            <div class="filter-section">
+                <label>Titre</label>
+                <input class="profile-input" type="text" name="titre" required>
+            </div>
+            <div class="filter-section">
+                <label>Type</label>
+                <input class="profile-input" type="text" name="type_oeuvre" placeholder="film, serie, anime..." required>
+            </div>
+            <div class="filter-section">
+                <label>Date de création</label>
+                <input class="profile-input" type="date" name="date_creation" required>
+            </div>
+            <div class="filter-section">
+                <label>Numéro volet/saison</label>
+                <input class="profile-input" type="text" name="numero_volet_saison" placeholder="S1 ou Episode 1">
+            </div>
+            <div class="filter-section">
+                <label>Description</label>
+                <textarea class="profile-input" name="description" rows="3"></textarea>
+            </div>
+            <div class="filter-section">
+                <label>Genres</label>
+                <select class="profile-input" name="genres" multiple size="5">
+                    {% for c in categories %}
+                    <option value="{{ c.nom_cat }}">{{ c.nom_cat }}</option>
+                    {% endfor %}
+                </select>
+                <small class="muted">Ctrl ou Cmd pour en choisir plusieurs.</small>
+            </div>
+            <div class="filter-section">
+                <label>Lien vers une autre oeuvre</label>
+                <select class="profile-input" name="lien_oeuvre">
+                    <option value="">(aucun)</option>
+                    {% for o in oeuvres_all %}
+                    <option value="{{ o.id_oeuvre }}">{{ o.titre }}</option>
+                    {% endfor %}
+                </select>
+                <select class="profile-input" name="lien_type" style="margin-top:8px;">
+                    <option value="">Type de lien</option>
+                    <option value="suite">Suite</option>
+                    <option value="prequel">Prequel</option>
+                    <option value="spin-off">Spin-off</option>
+                    <option value="remake">Remake</option>
+                    <option value="autre">Autre</option>
+                </select>
+            </div>
+            <div class="filter-section">
+                <label>Photo</label>
+                <input class="profile-input" type="file" name="photo_file" accept="image/*">
+            </div>
+            <div class="filter-actions">
+                <button class="btn-apply" type="submit"><span class="material-symbols-outlined">add</span> Ajouter</button>
+                <button class="btn-reset" type="button" id="cancelAddOeuvre">Annuler</button>
+            </div>
+        </form>
+      </div>;`
+    document.body.appendChild(modal);
+
+    function fermerModal() {
+        modal.setAttribute('hidden','');
+    }
+
+    modal.querySelector('.people-modal-backdrop').addEventListener('click', fermerModal);
+    modal.querySelector('.modal-close').addEventListener('click', fermerModal);
+    const trigger = document.getElementById('openAddOeuvre');
+    if (trigger) trigger.addEventListener('click', () => modal.removeAttribute('hidden'));
+    modal.querySelector('#cancelAddOeuvre').addEventListener('click', fermerModal);
+});
+
+function mettreAJourCommentaires(page = null, recherche = null, utilisateur = null) {
+    const conteneur = document.getElementById('commentsContainer');
+    const pageActuelle = page || conteneur.dataset.page || 1;
+    const rechercheActuelle = recherche !== null ? recherche : (conteneur.dataset.q || '');
+    const utilisateurActuel = utilisateur !== null ? utilisateur : (conteneur.dataset.userSearch || '');
+    const url = new URL("{{ url_for('admin_panel') }}", window.location.origin);
+    url.searchParams.set('partial', 'comments');
+    url.searchParams.set('page', pageActuelle);
+    if (rechercheActuelle) url.searchParams.set('q', rechercheActuelle);
+    if (utilisateurActuel) url.searchParams.set('user_search', utilisateurActuel);
+    fetch(url)
+        .then(reponse => reponse.text())
+        .then(html => {
+            conteneur.innerHTML = html;
+            conteneur.dataset.page = pageActuelle;
+            conteneur.dataset.q = rechercheActuelle;
+            conteneur.dataset.userSearch = utilisateurActuel;
+        });
+}
+</script>
+{% endblock %}
+{% endblock %}

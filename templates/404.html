@@ -1,40 +1,11 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Page non trouvée – CinéFan</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
+{% extends "base.html" %}
+{% block title %}Page introuvable — CinéFan{% endblock %}
 
-<body>
-
-<header class="site-header">
-    <div class="logo">CinéFan</div>
-    <nav class="main-nav">
-        <a href="{{ url_for('accueil') }}">Accueil</a>
-        <a href="{{ url_for('oeuvres') }}">Œuvres</a>
-        <a href="{{ url_for('recherche') }}">Recherche</a>
-        <a href="{{ url_for('artistes') }}">Artistes</a>
-
-        {% if session.get('user_id') %}
-            <a href="{{ url_for('favoris') }}">Mes favoris</a>
-            <span class="user-tag">👤 {{ session['pseudo'] }}</span>
-            <form action="{{ url_for('deconnexion') }}" method="post" style="display:inline;">
-                <button type="submit" class="logout-btn">Déconnexion</button>
-            </form>
-
-        {% else %}
-            <a href="{{ url_for('connexion') }}">Connexion</a>
-            <a href="{{ url_for('inscription') }}">Inscription</a>
-        {% endif %}
-    </nav>
-</header>
-
-<main class="error-container">
-    <h2>404 – Page non trouvée</h2>
-    <p>La page que vous cherchez n'existe pas ou a été déplacée.</p>
-    <p><a class="link" href="{{ url_for('accueil') }}">← Retour à l'accueil</a></p>
-</main>
-
-</body>
-</html>
+{% block content %}
+<div style="text-align:center; padding: 80px 20px;">
+    <span class="material-symbols-outlined" style="font-size:4rem; color:#facc15;">error</span>
+    <h1 style="font-size:2rem; margin: 16px 0 8px;">404 — Page introuvable</h1>
+    <p style="color:#94a3b8; margin-bottom:24px;">Cette page n'existe pas ou a été déplacée.</p>
+    <a href="{{ url_for('accueil') }}" class="btn-primary">Retour à l'accueil</a>
+</div>
+{% endblock %}

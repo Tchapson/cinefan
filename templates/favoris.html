@@ -1,56 +1,45 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Mes Favoris – CinéFan</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
+{% extends "base.html" %}
 
-<body>
+{% block title %}Mes favoris{% endblock %}
 
-<header class="site-header">
-    <div class="logo">CinéFan</div>
+{% block content %}
+<section class="bookmarks-page page-favoris">
+    <div class="bookmarks-header entete-favoris">
+        <h1 class="section-title">Mes favoris</h1>
+        <div class="bookmarks-filters filtres-favoris">
+            <div class="pill-row ligne-pilules">
+                <a class="chip pilule {{ 'active' if tri == 'recent' else '' }}" href="{{ url_for('favoris', statut=statut, tri='recent') }}">D'abord les récents</a>
+                <a class="chip pilule {{ 'active' if tri == 'ancien' else '' }}" href="{{ url_for('favoris', statut=statut, tri='ancien') }}">D'abord les anciens</a>
+            </div>
+        </div>
+    </div>
 
-    <nav class="main-nav">
-        <a href="{{ url_for('accueil') }}">Accueil</a>
-        <a href="{{ url_for('oeuvres') }}">Œuvres</a>
-        <a href="{{ url_for('recherche') }}">Recherche</a>
-
-        {% if session.get('user_id') %}
-            <a href="{{ url_for('favoris') }}" class="active">Mes favoris</a>
-            <a href="{{ url_for('profil') }}" class="user-tag">
-                👤 {{ session['pseudo'] }}
-            </a>
-            <form action="{{ url_for('deconnexion') }}" method="post" style="display:inline;">
-                <button type="submit" class="logout-btn">Déconnexion</button>
-            </form>
-        {% else %}
-            <a href="{{ url_for('connexion') }}">Connexion</a>
-            <a href="{{ url_for('inscription') }}">Inscription</a>
-        {% endif %}
-    </nav>
-</header>
-
-<main>
-
-<h1>Mes favoris</h1>
-
-<ul class="list">
-    {% for f in favoris %}
-    <li>
-        <a href="{{ url_for('oeuvre_detail', id_oeuvre=f.id_oeuvre) }}">
-            {{ f.titre }}
+    {% if favoris %}
+    <div class="bookmarks-grid grille-favoris">
+        {% for f in favoris %}
+        <a class="bookmark-card carte-favori" href="{{ url_for('oeuvre_detail', id_oeuvre=f.id_oeuvre) }}">
+            <div class="bookmark-cover couverture-favori">
+                {% if f.photo %}
+                <img src="{{ f.photo }}" alt="{{ f.titre }}">
+                {% else %}
+                <div class="card-cover-placeholder"><span class="material-symbols-outlined">bookmark</span></div>
+                {% endif %}
+                <span class="bookmark-badge badge-favori">{{ f.type_oeuvre|capitalize }}</span>
+                <span class="bookmark-status statut-favori">{{ f.statut|default('Favori')|capitalize }}</span>
+            </div>
+            <div class="bookmark-body corps-favori">
+                <div class="bookmark-title titre-favori">{{ f.titre }}</div>
+                <div class="bookmark-meta meta-favori">
+                    {% if f.date_ajout %}<span class="material-symbols-outlined">schedule</span> Ajouté le {{ f.date_ajout }}{% endif %}
+                </div>
+            </div>
         </a>
-        <span class="muted">
-            ({{ f.type_oeuvre }}, {{ f.date_creation }} – ajouté le {{ f.date_ajout }})
-        </span>
-    </li>
+        {% endfor %}
+    </div>
     {% else %}
-    <p class="muted">Vous n’avez encore ajouté aucune œuvre en favori.</p>
-    {% endfor %}
-</ul>
-
-</main>
-
-</body>
-</html>
+    <div class="empty-state">
+        Aucun favori pour l'instant. Ajoutez des oeuvres à votre liste.
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

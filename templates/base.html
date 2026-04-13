@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CinéFan{% endblock %}</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+
+<body>
+    <header class="navbar barre-navigation">
+        <div class="navbar-container conteneur-navigation">
+            <div class="navbar-logo logo-navigation">
+                <a href="{{ url_for('accueil') }}">
+                    <span class="logo-text texte-logo">CINEFAN</span>
+                </a>
+            </div>
+
+            <nav class="navbar-menu menu-navigation">
+                <button class="nav-link nav-search-trigger lien-nav-recherche" type="button">
+                    <span class="material-symbols-outlined">search</span> Recherche
+                </button>
+                <a href="{{ url_for('oeuvres') }}" class="nav-link lien-nav">
+                    <span class="material-symbols-outlined">folder</span> Catalogue
+                </a>
+                <a href="{{ url_for('statistiques') }}" class="nav-link lien-nav">
+                    <span class="material-symbols-outlined">insights</span> Statistiques
+                </a>
+                {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('admin_panel') }}" class="nav-icon icone-nav" title="Admin">
+                    <span class="material-symbols-outlined">shield_person</span>
+                </a>
+                {% endif %}
+            </nav>
+
+            <div class="navbar-right navigation-droite">
+                <a href="{{ url_for('favoris') }}" class="nav-circle cercle-nav" title="Favoris">
+                    <span class="material-symbols-outlined">bookmark</span>
+                </a>
+                {% if session.get('user_id') %}
+                    <div class="nav-profile">
+                        <button type="button" class="nav-circle nav-avatar" id="profileToggle">
+                            {{ session.get('avatar_emoji') or session.get('pseudo', 'Profil')[:2]|upper }}
+                        </button>
+                        <div class="profile-menu menu-profil" id="profileMenu" hidden>
+                            <div class="profile-header entete-profil-nav">
+                                <div class="profile-avatar avatar-profil-nav">{{ session.get('pseudo', 'Profil')[:2]|upper }}</div>
+                                <div>
+                                    <div class="profile-name nom-profil-nav">{{ session.get('pseudo', 'Profil') }}</div>
+                                    <div class="profile-mail mail-profil-nav">{{ session.get('email', '') }}</div>
+                                </div>
+                            </div>
+                            <a href="{{ url_for('profil') }}" class="profile-item item-profil"><span class="material-symbols-outlined">person</span> Mon profil</a>
+                            <a href="{{ url_for('favoris') }}" class="profile-item item-profil"><span class="material-symbols-outlined">bookmarks</span> Mes favoris</a>
+                            <a href="{{ url_for('deconnexion') }}" class="profile-item item-profil"><span class="material-symbols-outlined">logout</span> Se déconnecter</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('connexion') }}" class="btn-login bouton-connexion"><span class="material-symbols-outlined">login</span> Connexion</a>
+                {% endif %}
+            </div>
+
+            <button class="navbar-toggle" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+
+        </div>
+    </header>
+
+    <div class="search-overlay calque-recherche" id="searchOverlay" hidden>
+        <div class="search-overlay-backdrop toile-recherche"></div>
+        <div class="search-panel panneau-recherche">
+            <form action="{{ url_for('recherche') }}" method="get" class="search-panel-form formulaire-recherche">
+                <div class="search-panel-input entree-recherche">
+                    <span class="material-symbols-outlined">search</span>
+                    <input id="searchPanelInput" type="text" name="q" placeholder="Que cherchez-vous?" autocomplete="off" value="{{ q|default('') }}">
+                    <input type="hidden" name="type" id="searchTypeInput" value="">
+                </div>
+                <div class="search-panel-tabs onglets-recherche" role="tablist">
+                    <button type="button" class="tab-chip active" data-type="film">Films</button>
+                    <button type="button" class="tab-chip pastille-recherche" data-type="serie">Séries</button>
+                    <button type="button" class="tab-chip pastille-recherche" data-type="personnage">Personnages</button>
+                    <button type="button" class="tab-chip pastille-recherche" data-type="acteur">Acteurs</button>
+                    <button type="button" class="tab-chip pastille-recherche" data-type="utilisateur">Utilisateurs</button>
+                </div>
+            </form>
+
+            <div class="search-results resultats-recherche" id="searchResults">
+                {% if resultats is defined and q %}
+                    {% for o in resultats %}
+                    <a class="search-result-item item-resultat" href="{{ url_for('oeuvre_detail', id_oeuvre=o.id_oeuvre) }}">
+                        <div class="search-result-cover vignette-resultat">
+                            {% if o.photo %}
+                            <img src="{{ o.photo }}" alt="{{ o.titre }}">
+                            {% else %}
+                            <span class="material-symbols-outlined">movie</span>
+                            {% endif %}
+                        </div>
+                        <div class="search-result-body corps-resultat">
+                            <div class="search-result-title titre-resultat">{{ o.titre }}</div>
+                            <div class="search-result-meta meta-resultat">{{ o.type_oeuvre }} • {{ o.date_creation }}</div>
+                        </div>
+                    </a>
+                    {% else %}
+                    <div class="search-result-empty vide-resultat">Aucun résultat pour « {{ q }} »</div>
+                    {% endfor %}
+                {% else %}
+                    <div class="search-result-empty vide-resultat">Commencez à taper pour voir les résultats.</div>
+                {% endif %}
+            </div>
+
+            <div class="search-panel-footer pied-recherche">
+                <span class="kbd-hint">↵ Valider</span>
+                <span class="kbd-hint">⇅ Navigation</span>
+                <span class="kbd-hint">ESC Fermer</span>
+            </div>
+        </div>
+    </div>
+
+    <nav class="breadcrumb fil-ariane">
+        {% block breadcrumb %}{% endblock %}
+    </nav>
+
+    <main class="main-content contenu-principal">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer pied-page">
+        <div class="footer-container conteneur-pied">
+            <div class="footer-centered pied-centre">
+                <p> CinéFan. Tous droits réservés ⭐</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const panneauRecherche = document.getElementById('searchOverlay');
+        const champEntree = document.getElementById('searchPanelInput');
+        const boutonsOuverture = document.querySelectorAll('.nav-search-trigger');
+        const fondEcran = document.querySelector('.search-overlay-backdrop');
+        const onglets = document.querySelectorAll('.tab-chip');
+        const formulaire = document.querySelector('.search-panel-form');
+        const resultats = document.getElementById('searchResults');
+        const spinner = document.createElement('div');
+        spinner.className = 'search-spinner';
+        const entreeTypeCache = document.getElementById('searchTypeInput');
+        let typeActuel = '';
+        function ouvrirPanneau() {
+            panneauRecherche.hidden = false;
+            panneauRecherche.classList.add('open');
+            document.body.classList.add('no-scroll');
+            setTimeout(() => champEntree && champEntree.focus(), 10);
+        }
+        function fermerPanneau() {
+            panneauRecherche.classList.remove('open');
+            document.body.classList.remove('no-scroll');
+            setTimeout(() => { panneauRecherche.hidden = true; }, 150);
+        }
+        boutonsOuverture.forEach(bouton => bouton.onclick = ouvrirPanneau);
+
+        if (fondEcran) fondEcran.onclick = fermerPanneau;
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && !panneauRecherche.hidden) fermerPanneau();
+        });
+        onglets.forEach(onglet => onglet.onclick = function() {
+            onglets.forEach(o => o.classList.remove('active'));
+            onglet.classList.add('active');
+            typeActuel = onglet.dataset.type || '';
+            if (entreeTypeCache) entreeTypeCache.value = typeActuel;
+            if (champEntree) champEntree.focus();
+            chargerResultats();
+        });
+        async function chargerResultats() {
+            if (!formulaire || !champEntree || !resultats) return;
+
+            const requete = champEntree.value.trim();
+            const url = new URL(formulaire.action, window.location.origin);
+            url.searchParams.set('q', requete);
+            if (typeActuel) url.searchParams.set('type', typeActuel);
+            url.searchParams.set('format', 'json');
+
+            resultats.innerHTML = '';
+            resultats.appendChild(spinner);
+
+            try {
+                const reponse = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
+                if (!reponse.ok) throw 1;
+                const elements = await reponse.json();
+                resultats.innerHTML = '';
+
+                if (!elements.length) {
+                    resultats.innerHTML = '<div class="search-result-empty vide-resultat">Aucun résultat.</div>';
+                    return;
+                }
+
+                elements.forEach(objet => {
+                    resultats.innerHTML += `<a class="search-result-item" href="${objet.url || '#'}">
+                        <div class="search-result-cover vignette-resultat">${objet.photo ? `<img src="${objet.photo}" alt="${objet.titre || ''}">` : '<span class="material-symbols-outlined">movie</span>'}</div>
+                        <div class="search-result-body corps-resultat">
+                            <div class="search-result-title titre-resultat">${objet.titre || 'Sans titre'}</div>
+                            <div class="search-result-meta meta-resultat">${objet.type || objet.type_oeuvre || ''}${objet.date_creation ? ' • ' + objet.date_creation : ''}</div>
+                        </div>
+                    </a>`;
+                });
+            } catch {
+                resultats.innerHTML = '<div class="search-result-empty vide-resultat">Impossible de charger les résultats.</div>';
+            }
+        }
+
+        if (formulaire && champEntree) {
+            formulaire.onsubmit = e => e.preventDefault();
+            let delai;
+            champEntree.oninput = () => {
+                clearTimeout(delai);
+                delai = setTimeout(chargerResultats, 300);
+            };
+        }
+        const basculeProfil = document.getElementById('profileToggle');
+        const menuProfil = document.getElementById('profileMenu');
+
+        if (basculeProfil && menuProfil) {
+            menuProfil.setAttribute('hidden', '');
+
+            function fermerMenu() {
+                menuProfil.setAttribute('hidden', '');
+            }
+
+            function basculeMenu() {
+                if (menuProfil.hasAttribute('hidden')) {
+                    menuProfil.removeAttribute('hidden');
+                } else {
+                    menuProfil.setAttribute('hidden', '');
+                }
+            }
+
+            basculeProfil.onclick = e => {
+                e.stopPropagation();
+                basculeMenu();
+            };
+
+            menuProfil.querySelectorAll('a').forEach(lien => lien.onclick = fermerMenu);
+
+            document.addEventListener('click', e => {
+                if (menuProfil.hasAttribute('hidden')) return;
+                if (!menuProfil.contains(e.target) && e.target !== basculeProfil) fermerMenu();
+            });
+
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape' && !menuProfil.hasAttribute('hidden')) fermerMenu();
+            });
+
+            window.addEventListener('beforeunload', fermerMenu);
+        }
+
+        window.searchOverlay = { 
+            open: ouvrirPanneau, 
+            close: fermerPanneau, 
+            refresh: chargerResultats 
+        };
+    });
+
+    </script>
+    {% block scripts %}{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+{% if oeuvres %}
+    {% for oeuvre in oeuvres %}
+        {% set type_slug = oeuvre.type_oeuvre|lower|replace('é','e') %}
+        <a href="{{ url_for('oeuvre_detail', id_oeuvre=oeuvre.id) }}" class="library-card carte-bibliotheque" data-type="{{ type_slug }}">
+            <div class="card-image image-carte">
+                {% if oeuvre.photo %}
+                    <img src="{{ oeuvre.photo }}" alt="{{ oeuvre.titre }}">
+                {% else %}
+                    <div class="card-placeholder cache-carte">
+                        <span class="material-symbols-outlined">movie</span>
+                    </div>
+                {% endif %}
+                <div class="card-badge badge-carte {{ oeuvre.type_oeuvre|lower }}">
+                    {{ oeuvre.type_oeuvre }}
+                </div>
+            {% if oeuvre.note_moyenne %}
+                {% set r = oeuvre.note_moyenne|float %}
+                <div class="card-rating card-rating-small note-carte note-carte-petite">
+                    <div class="card-rating-stars">
+                        {% for i in range(1,6) %}
+                            {% set is_full = r >= i %}
+                            {% set is_half = (r + 0.5 >= i) and not is_full %}
+                            <span class="card-star etoile-carte {{ 'filled' if is_full else '' }} {{ 'half' if is_half else '' }}">★</span>
+                        {% endfor %}
+                    </div>
+                    <span class="card-rating-value">{{ "%.1f"|format(r) }}</span>
+                </div>
+            {% endif %}
+        </div>
+            <div class="card-info infos-carte">
+                <h3 class="card-title titre-carte">{{ oeuvre.titre }}</h3>
+                <p class="card-year annee-carte">{{ oeuvre.annee_sortie or oeuvre.date_creation.year if oeuvre.date_creation else "" }}</p>
+            </div>
+        </a>
+    {% endfor %}
+{% else %}
+    <div class="muted">Aucune oeuvre ne correspond aux filtres!!!</div>
+{% endif %}

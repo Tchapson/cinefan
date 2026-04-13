@@ -1,64 +1,136 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Mon Profil – CinéFan</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
+{% extends "base.html" %}
 
-<body>
+{% block title %}Profil{% endblock %}
 
-<header class="site-header">
-    <div class="logo">CinéFan</div>
+{% block content %}
+<section class="page-profil">
+    <div class="entete-profil">
+        <div class="entete-profil-left">
+            <div class="entete-profil-avatar">{{ session.get('avatar_emoji') or user.pseudo[:2]|upper }}</div>
+            <div>
+                <h1 class="entete-profil-name">{{ user.pseudo }}</h1>
+                <div class="chip">Niveau 0</div>
+            </div>
+        </div>
+        <div class="entete-profil-actions">
+            <button type="button" class="btn-primary" id="openEditModal"><span class="material-symbols-outlined">edit</span> Modifier le profil</button>
+        </div>
+    </div>
 
-    <nav class="main-nav">
-        <a href="{{ url_for('accueil') }}">Accueil</a>
-        <a href="{{ url_for('oeuvres') }}">Œuvres</a>
-        <a href="{{ url_for('recherche') }}">Recherche</a>
-        <a href="{{ url_for('artistes') }}">Artistes</a>
-
-        {% if session.get('user_id') %}
-            <a href="{{ url_for('favoris') }}">Mes favoris</a>
-            <a href="{{ url_for('profil') }}" class="active">Profil</a>
-            <a href="{{ url_for('profil') }}" class="user-tag">
-                👤 {{ session['pseudo'] }}
-            </a>
-            <form action="{{ url_for('deconnexion') }}" method="post" style="display:inline;">
-                <button type="submit" class="logout-btn">Déconnexion</button>
-            </form>
-        {% else %}
-            <a href="{{ url_for('connexion') }}">Connexion</a>
-            <a href="{{ url_for('inscription') }}">Inscription</a>
-        {% endif %}
-    </nav>
-</header>
-
-<main>
-
-<h1>Mon Profil</h1>
-
-<section class="profile-section">
-    <h2>Informations personnelles</h2>
-    <p><strong>Pseudo :</strong> {{ user.pseudo }}</p>
-    <p><strong>Email :</strong> {{ user.email }}</p>
-    <p><strong>Rôle :</strong> {{ user.role_utilisateur }}</p>
+    <div class="grille-profil">
+        <div class="contenu-profil">
+            <div class="card-slab">
+                <div class="card-slab-header">
+                    <h2>Mes favoris</h2>
+                </div>
+                {% if favoris %}
+                <div class="bookmarks-grid">
+                    {% for f in favoris %}
+                    <a class="bookmark-card" href="{{ url_for('oeuvre_detail', id_oeuvre=f.id_oeuvre) }}">
+                        <div class="bookmark-cover">
+                            {% if f.photo %}
+                            <img src="{{ f.photo }}" alt="{{ f.titre }}">
+                            {% else %}
+                            <div class="card-cover-placeholder"><span class="material-symbols-outlined">collections_bookmark</span></div>
+                            {% endif %}
+                            <span class="bookmark-badge">{{ f.type_oeuvre|capitalize }}</span>
+                            <span class="bookmark-status">{{ f.statut|default('Favori')|capitalize }}</span>
+                        </div>
+                        <div class="bookmark-body">
+                            <div class="bookmark-title">{{ f.titre }}</div>
+                            {% if f.date_creation %}<div class="bookmark-meta">Créé {{ f.date_creation }}</div>{% endif %}
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">Aucun favori pour l’instant.</div>
+                {% endif %}
+            </div>
+        </div>
+        <aside class="colonne-profil">
+            <div class="card-slab">
+                <h3>Statistiques</h3>
+                <div class="stat-list">
+                    <div class="stat-item">
+                        <span class="material-symbols-outlined">book</span>
+                        <div>
+                            <div class="stat-label">Favoris</div>
+                            <div class="stat-value">{{ stats.favoris }}</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="material-symbols-outlined">chat</span>
+                        <div>
+                            <div class="stat-label">Commentaires</div>
+                            <div class="stat-value">{{ stats.commentaires }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
 </section>
 
-<hr>
+<div class="modal-backdrop" id="editModal" hidden>
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>Éditer le profil</h3>
+            <button type="button" class="icon-btn" id="closeEditModal"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <form method="post" class="modal-body">
+            <label class="modal-label">Pseudo</label>
+            <input type="text" name="pseudo" class="champ-profil" placeholder="Nouveau pseudo">
+            <label class="modal-label">Email</label>
+            <input type="email" name="email" class="champ-profil" placeholder="Nouvel email">
+            <label class="modal-label">Avatar (emoji)</label>
+            <input type="hidden" name="avatar" id="avatarInput">
+            <div class="emoji-grid" id="emojiGrid">
+                {% set emojis = ['😀','😎','😍','🤖','🐱','🐶','🐼','🦊','🐸','🐧','🐢','🐙','⭐','🌙','🔥','🍀','🍕','🎬'] %}
+                {% for e in emojis %}
+                <button type="button" class="emoji-btn" data-emoji="{{ e }}">{{ e }}</button>
+                {% endfor %}
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn-primary">Enregistrer</button>
+                <button type="button" class="btn-secondary" id="cancelEditModal">Annuler</button>
+            </div>
+        </form>
+    </div>
+</div>
 
-<section class="profile-section">
-    <h2>Statistiques</h2>
-    <p><strong>Favoris :</strong> {{ nb_favoris }}</p>
-    <p><strong>Commentaires :</strong> {{ nb_commentaires }}</p>
-</section>
+{% endblock %}
 
-<hr>
+{% block scripts %}
 
-<section>
-    <a class="btn-primary" href="{{ url_for('deconnexion') }}">Se déconnecter</a>
-</section>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('editModal');
+    const boutonOuvrir = document.getElementById('openEditModal');
+    const boutonFermer = document.getElementById('closeEditModal');
+    const boutonAnnuler = document.getElementById('cancelEditModal');
+    const grille = document.getElementById('emojiGrid');
+    const champAvatar = document.getElementById('avatarInput');
 
-</main>
-
-</body>
-</html>
+    const fermerModal = () => { modal.setAttribute('hidden',''); };
+    const ouvrirModal = () => { modal.removeAttribute('hidden'); };
+    fermerModal();
+    boutonOuvrir?.addEventListener('click', ouvrirModal);
+    boutonFermer?.addEventListener('click', fermerModal);
+    boutonAnnuler?.addEventListener('click', fermerModal);
+    modal?.addEventListener('click', (e) => {
+        if (e.target === modal) fermerModal();
+    });
+    document.addEventListener('keydown', (e) => { 
+        if (e.key === 'Escape') fermerModal(); 
+    });
+    grille?.addEventListener('click', (e) => {
+        const bouton = e.target.closest('.emoji-btn');
+        if (!bouton) return;
+        grille.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('active'));
+        bouton.classList.add('active');
+        champAvatar.value = bouton.dataset.emoji;
+    });
+});
+</script>
+{% endblock %}

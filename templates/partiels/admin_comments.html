@@ -1,0 +1,32 @@
+<div class="tableau-statistiques comments-table tableau-commentaires">
+    {% for c in messages %}
+    <div class="ligne-statistique comment-row ligne-commentaire {% if c.role_utilisateur == 'banni' %}banned{% endif %}">
+        <div class="comment-meta meta-commentaire">
+            <div class="comment-user utilisateur-commentaire">{{ c.pseudo }}</div>
+            <div class="comment-work oeuvre-commentaire">{{ c.titre }}</div>
+            <div class="comment-text texte-commentaire">{{ c.commentaire }}</div>
+        </div>
+        <div class="comment-actions actions-commentaire">
+            <form method="post" action="{{ url_for('admin_delete_comment', id_commentaire=c.id_commentaire) }}" data-async data-type="comment">
+                <button type="submit" class="btn-secondary small">Supprimer</button>
+            </form>
+            <form method="post" action="{{ url_for('admin_ban_delete_comment', id_commentaire=c.id_commentaire) }}" data-async data-type="comment">
+                <input type="hidden" name="id_utilisateur" value="{{ c.id_utilisateur if c.id_utilisateur is defined else '' }}">
+                <button type="submit" class="btn-secondary small">Ban + Delete</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+    {% if not messages %}
+    <div class="ligne-statistique"><div>Aucun commentaire</div></div>
+    {% endif %}
+</div>
+<div class="pagination pagination-commentaires">
+    {% if page > 1 %}
+    <a class="page-btn bouton-page" data-comments-page="{{ page-1 }}" data-q="{{ q }}" data-user-search="{{ search_user|default('') }}"><span class="material-symbols-outlined">chevron_left</span></a>
+    {% endif %}
+    <span class="page-btn bouton-page active">{{ page }}</span>
+    {% if page < total_pages %}
+    <a class="page-btn bouton-page" data-comments-page="{{ page+1 }}" data-q="{{ q }}" data-user-search="{{ search_user|default('') }}"><span class="material-symbols-outlined">chevron_right</span></a>
+    {% endif %}
+</div>
