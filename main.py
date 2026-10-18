@@ -22,12 +22,13 @@ from werkzeug.utils import secure_filename
 from pathlib import Path
 from dotenv import load_dotenv
 import os
+import secrets
 import fonctions as fcts
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "dev-key-change-in-production")
+app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
 
 
 
@@ -35,6 +36,15 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-key-change-in-production")
 # ═══════════════════════════════════════════════════════════════════════════
 #                           ROUTES: ACCUEIL
 # ═══════════════════════════════════════════════════════════════════════════
+@app.before_request
+def protect_admin_routes():
+    """Vérifier l'utilisateur connecté avant toute opération d'administration."""
+    if request.path == "/admin" or request.path.startswith("/admin/"):
+        user_id = session.get("user_id")
+        if user_id is None or not fcts.get_admin_user(user_id):
+            return redirect(url_for("connexion"))
+
+
 @app.route("/")
 def accueil():
     """
@@ -447,7 +457,7 @@ def admin_panel():
 
 @app.route("/admin/user/<int:id_utilisateur>/ban", methods=["POST"])
 def admin_ban_user(id_utilisateur):
-    admin_user = fcts.get_admin_user(id_utilisateur)
+    admin_user = fcts.get_admin_user(session["user_id"])
     if not admin_user:
         return redirect(url_for("connexion"))
     fcts.bannir_utilisateur(id_utilisateur)
@@ -456,7 +466,7 @@ def admin_ban_user(id_utilisateur):
 
 @app.route("/admin/user/<int:id_utilisateur>/unban", methods=["POST"])
 def admin_unban_user(id_utilisateur):
-    admin_user = fcts.get_admin_user(id_utilisateur)
+    admin_user = fcts.get_admin_user(session["user_id"])
     if not admin_user:
         return redirect(url_for("connexion"))
     fcts.debannir_utilisateur(id_utilisateur)
@@ -558,7 +568,7 @@ def admin_oeuvre_edit():
 
 @app.route("/admin/oeuvre/delete", methods=["POST"])
 def admin_oeuvre_delete():
-    admin_user = fcts.get_admin_user()
+    admin_user = fcts.get_admin_user(session["user_id"])
     if not admin_user:
         return redirect(url_for("connexion"))
     id_oeuvre = request.form.get("id_oeuvre")
