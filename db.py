@@ -28,7 +28,7 @@ def connect():
             user=os.environ.get("DB_USER",       "postgres"),
             host=os.environ.get("DB_HOST",       "localhost"),
             password=os.environ.get("DB_PASSWORD", ""),
-            port=int(os.environ.get("DB_PORT",   5433)),
+            port=int(os.environ.get("DB_PORT",   5432)),
             options="-c client_encoding=UTF8",
         )
         conn.autocommit = True
