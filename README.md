@@ -1,107 +1,60 @@
 # CinéFan
 
-Application web de catalogue cinéma développée avec Flask et PostgreSQL.
-
-Les utilisateurs peuvent parcourir des œuvres et des artistes, laisser des commentaires,
-gérer leurs favoris et créer un compte personnel.
+Application de catalogue de films et séries réalisée en équipe dans le cadre de la licence informatique. Backend Python/Flask, base PostgreSQL et interface HTML/CSS avec Jinja2.
 
 ## Fonctionnalités
 
-- Catalogue d'œuvres (films, séries) avec pages détail et affiche visuelle
-- Catalogue d'artistes (réalisateurs, acteurs) avec filmographie
-- Recherche full-text sur les titres et descriptions
-- Inscription et connexion avec mot de passe haché (bcrypt)
-- Système de favoris par utilisateur
-- Commentaires sur les œuvres
-- Page profil utilisateur (nb de favoris, nb de commentaires)
-- Middleware de protection des routes (accès restreint sans connexion)
-- Grille visuelle de films sur la page d'accueil avec badges genre/type
-- Page 404 personnalisée
+- Catalogue avec fiches d'œuvres, filtres, recherche et pagination.
+- Inscription, connexion et sessions ; hachage des mots de passe avec Werkzeug.
+- Favoris, notes, commentaires et profil utilisateur.
+- Statistiques et interface d'administration réservée aux administrateurs.
 
-## Technologies
+## Installation locale
 
-- **Backend :** Python 3, Flask
-- **Base de données :** PostgreSQL (via psycopg2)
-- **Sécurité :** bcrypt pour le hachage des mots de passe, sessions Flask
-- **Frontend :** HTML/CSS (Jinja2)
-
-## Installation
-
-### Prérequis
-
-- Python 3.x
-- PostgreSQL
-
-### Étapes
-
-1. Cloner le dépôt :
+Prérequis : Python 3, PostgreSQL en cours d'exécution, outils `psql` et `createdb`, Git.
 
 ```bash
-git clone https://github.com/TON_USERNAME/cinefan-flask.git
-cd cinefan-flask
-```
-
-2. Installer les dépendances :
-
-```bash
-pip install -r requirements.txt
-```
-
-3. Configurer la base de données :
-
-```bash
+git clone https://github.com/Tchapson/cinefan.git
+cd cinefan
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 cp .env.example .env
-# Éditer .env avec vos identifiants PostgreSQL
+python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-4. Importer le schéma, les données de base, puis l'enrichissement :
+Renseigner `.env` : `DB_NAME`, `DB_USER`, `DB_HOST`, `DB_PASSWORD`, `DB_PORT` et la valeur générée pour `SECRET_KEY`. Ne pas publier ce fichier. Sous Windows, activer l'environnement avec `.venv\Scripts\activate`.
+
+Créer une **base locale dédiée et vide**. Adapter l'utilisateur, le port et le nom de base ci-dessous aux valeurs de `.env` (les outils PostgreSQL ne lisent pas ce fichier automatiquement) :
 
 ```bash
-psql -U postgres -d cinefan -f dump.sql
-psql -U postgres -d cinefan -f data_enrichissement.sql
+createdb -h localhost -p 5432 -U postgres cinefan
+psql -h localhost -p 5432 -U postgres -d cinefan -v ON_ERROR_STOP=1 -f dump.sql
+psql -h localhost -p 5432 -U postgres -d cinefan -v ON_ERROR_STOP=1 -f data_enrichissement.sql
+python main.py
 ```
 
-5. Lancer l'application :
+Ouvrir http://127.0.0.1:5000. **`dump.sql` supprime et recrée les tables concernées : ne pas l'exécuter sur une base contenant des données à conserver.**
 
-```bash
-python3 main.py
-```
+## Parcours de démonstration
 
-L'application est accessible sur `http://localhost:5000`.
+1. Parcourir le catalogue et tester les filtres.
+2. Créer un compte depuis l'inscription, puis se connecter.
+3. Ajouter un favori, une note et un commentaire ; consulter le profil.
+4. L'administration nécessite un compte disposant du rôle administrateur en base.
 
-## Structure du projet
+## Structure
 
-```
-cinefan-flask/
-├── main.py               # Application Flask — routes et logique
-├── db.py                 # Connexion PostgreSQL et fonctions d'accès aux données
-├── dump.sql              # Schéma et données de la base
-├── requirements.txt      # Dépendances Python
-├── .env.example          # Modèle de configuration (à copier en .env)
-├── static/
-│   └── style.css         # Feuille de style
-└── templates/            # Templates Jinja2
-    ├── accueil.html
-    ├── oeuvres.html
-    ├── oeuvre_detail.html
-    ├── artistes.html
-    ├── artiste_detail.html
-    ├── connexion.html
-    ├── inscription.html
-    ├── profil.html
-    ├── favoris.html
-    ├── recherche.html
-    └── 404.html
-```
+- `main.py` : routes Flask, sessions, validation des requêtes et rendu.
+- `fonctions.py` : accès aux données et opérations métier.
+- `db.py` : connexion PostgreSQL configurée par environnement.
+- `templates/`, `static/` : vues, CSS et images.
+- `dump.sql`, `data_enrichissement.sql` : initialisation et données de démonstration.
 
-## Compétences mises en œuvre
+## Périmètre et limites
 
-- Développement web backend avec Flask
-- Modélisation et requêtes SQL (PostgreSQL)
-- Authentification sécurisée (hachage bcrypt, sessions)
-- Architecture MVC légère (routes / accès données / templates)
-- Gestion des variables d'environnement
+Projet pédagogique à exécuter localement. La configuration de production, la protection CSRF, les limites de téléversement et l'audit complet des droits restent à traiter avant une exposition publique. Une clé de session temporaire est générée si `SECRET_KEY` est vide : les sessions expirent alors au redémarrage.
 
-## Auteur
+Les anciens comptes du jeu de données ne sont pas des identifiants de démonstration garantis : créer un compte dédié. Les modifications des secrets doivent être faites aussi sur les services concernés ; modifier un fichier Git ne révoque pas les anciennes valeurs.
 
-Mohamed Fane — L2 Informatique
+Mohamed Noumory Fané — licence informatique.
